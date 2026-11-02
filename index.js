@@ -1,5 +1,18 @@
 const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, StringSelectMenuBuilder, ChannelType, PermissionsBitField } = require('discord.js');
+const http = require('http');
 
+// 1. Prosty serwer HTTP spełniający wymagania Render.com dotyczące portów
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Bot is alive and running!');
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Serwer HTTP działa na porcie ${PORT}`);
+});
+
+// 2. Inicjalizator bota
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -19,7 +32,7 @@ const ROLE_NIEZWERYFIKOWANY = "Niezweryfikowany";
 const ROLE_ZWERYFIKOWANY = "DarkCode-użytkownik";
 const ROLE_TICKET = "DarkCode-Ticket";
 
-// Link do Twojej grafiki DarkCode
+// Link do grafiki DarkCode
 const GRAFIKA_BANNER = "https://cdn.discordapp.com/attachments/1566553678343569619/1566776139073064970/Zrzut_ekranu_2026-11-01_195913.png?ex=6ae9c57c&is=6ae873fc&hm=f7c21259db3afb1f7bc4eec902634ea49f41b4a977ed6fcb7b697e09e53e8540&"; 
 
 client.once('ready', () => {
@@ -54,12 +67,11 @@ client.on('messageCreate', async message => {
     if (message.author.bot) return;
     if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) return;
 
-    // KOMENDA KONKURS (Na kanale + wysyłka na PW z przyciskiem zgłoszenia)
+    // KOMENDA KONKURS
     if (message.content.startsWith('!konkurs')) {
         const tresc = message.content.slice(8).trim();
         if (!tresc) return message.reply("❌ Podaj treść konkursu! Przykład: `!konkurs Do wygrania darmowy skrypt! Zasady: ...`");
 
-        // 1. Wysłanie informacji o konkursie na kanał
         const channelEmbed = new EmbedBuilder()
             .setAuthor({ name: "Oficjalny Konkurs • DarkCode", iconURL: message.guild.iconURL() })
             .setTitle("🎁 NOWY KONKURS NA SERWERZE!")
@@ -70,8 +82,6 @@ client.on('messageCreate', async message => {
             .setTimestamp();
 
         await message.channel.send({ embeds: [channelEmbed] });
-
-        // 2. Rozsyłanie na PW z przyciskiem wzięcia udziału
         await message.reply("⏳ Wysyłam również informację o konkursie na PW do zweryfikowanych graczy z przyciskiem zgłoszenia...");
 
         await message.guild.members.fetch();
@@ -107,7 +117,7 @@ client.on('messageCreate', async message => {
                 await member.send({ embeds: [dmEmbed], components: [dmRow] });
                 wyslane++;
             } catch (err) {
-                bledy++; // Użytkownik ma zablokowane PW
+                bledy++;
             }
         }
 
@@ -115,7 +125,7 @@ client.on('messageCreate', async message => {
         message.delete().catch(() => {});
     }
 
-    // OGŁOSZENIE (Na kanale + wysyłka na PW z przyciskiem "Przeczytane")
+    // OGŁOSZENIE
     if (message.content.startsWith('!ogloszenie')) {
         const tresc = message.content.slice(12).trim();
         if (!tresc) return message.reply("❌ Podaj treść ogłoszenia!");
@@ -130,7 +140,6 @@ client.on('messageCreate', async message => {
             .setTimestamp();
 
         await message.channel.send({ embeds: [channelEmbed] });
-
         await message.reply("⏳ Wysyłam również ogłoszenie na PW do wszystkich zweryfikowanych graczy z przyciskiem przeczytania...");
 
         await message.guild.members.fetch();
@@ -284,7 +293,6 @@ client.on('messageCreate', async message => {
 
 // 3. Obsługa interakcji (przyciski, modale, menu)
 client.on('interactionCreate', async interaction => {
-    // --- POTWIERDZENIE PRZECZYTANE NA PW ---
     if (interaction.isButton() && interaction.customId === 'mark_as_read') {
         const disabledRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -302,7 +310,6 @@ client.on('interactionCreate', async interaction => {
         return;
     }
 
-    // --- WZIĘCIE UDZIAŁU W KONKURSIE NA PW ---
     if (interaction.isButton() && interaction.customId === 'join_contest') {
         const disabledRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -320,7 +327,6 @@ client.on('interactionCreate', async interaction => {
         return;
     }
 
-    // --- WERYFIKACJA ---
     if (interaction.isButton() && interaction.customId === 'start_verification') {
         const num1 = Math.floor(Math.random() * 10) + 1;
         const num2 = Math.floor(Math.random() * 10) + 1;
@@ -352,7 +358,6 @@ client.on('interactionCreate', async interaction => {
         }
     }
 
-    // --- REKRUTACJA ---
     if (interaction.isStringSelectMenu() && interaction.customId === 'recruitment_select_role') {
         const roleType = interaction.values[0];
         const roleNames = { helper: 'Helper', dev: 'Developer', gfx: 'Grafik' };
@@ -454,7 +459,6 @@ client.on('interactionCreate', async interaction => {
         setTimeout(() => channel.delete().catch(() => {}), 4000);
     }
 
-    // --- TICKETY ---
     if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_select_category') {
         const categoryType = interaction.values[0];
         const categoryNames = { tech: 'Pomoc Techniczna', buy: 'Zakupy i Usługi', other: 'Inne sprawy' };
@@ -532,16 +536,5 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
+// Logowanie bota
 client.login(process.env.DISCORD_TOKEN);
-const http = require('http');
-
-// Tworzymy prosty serwer HTTP, który odpowiada na każde zapytanie i spełnia wymagania Render.com
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Bot is alive and running!');
-});
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Serwer HTTP działa na porcie ${PORT}`);
-});
