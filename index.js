@@ -533,3 +533,15 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.login(process.env.DISCORD_TOKEN);
+const http = require('http');
+
+// Tworzymy prosty serwer HTTP, który odpowiada na każde zapytanie i spełnia wymagania Render.com
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Bot is alive and running!');
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Serwer HTTP działa na porcie ${PORT}`);
+});
