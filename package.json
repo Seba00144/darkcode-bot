@@ -1,0 +1,9 @@
+{
+  "name": "darkcode-bot",
+  "version": "1.0.0",
+  "description": "DarkCode Discord Bot",
+  "main": "index.js",
+  "dependencies": {
+    "discord.js": "^14.14.1"
+  }
+}
